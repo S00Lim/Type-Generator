@@ -107,6 +107,64 @@ let autoScaleCheckbox;
 let userTouchedTracking = false;
 let userTouchedLeading = false;
 
+
+// ===================== MOTION (NEW) =====================
+let motionOn = true;
+
+// 1) Breathing
+let breatheOn = true;
+let breatheAmp = 0.06;     // 0~0.2
+let breatheSpeed = 0.8;    // 0.2~2
+
+// 2) Wobble (point jitter)
+let wobbleOn = false;
+let wobbleAmp = 2.5;       // 0~10
+let wobbleSpeed = 0.6;     // 0.1~2
+
+// 3) Wave phase (flow inside glyph)
+let waveOn = true;
+let waveAmp = 0.08;        // 0~0.2
+let waveScale = 0.01;      // 0.002~0.03
+let waveSpeed = 1.5;       // 0.2~4
+
+// 4) Traveling highlight
+let highlightOn = true;
+let highlightSpeed = 0.25; // 0.05~1
+let highlightWidth = 0.08; // 0.02~0.2
+let highlightBoostA = 0.65; // alpha boost
+let highlightBoostW = 1.2;  // strokeW boost
+
+// 5) Ring drift
+let driftOn = false;
+let driftAmp = 2.0;        // 0~10
+let driftSpeed = 0.9;      // 0.1~3
+
+// 6) Per-letter delay
+let delayOn = true;
+let delayPerGlyph = 0.04;  // 0.01~0.08
+
+// 7) Mouse magnet
+let mouseOn = false;
+let mouseRadius = 300;     // 100~600
+let mouseBoost = 0.6;      // 0~1
+
+// 8) Trail (afterimage)
+let trailOn = false;
+let trailAlpha = 25;       // 5~80
+
+// Motion UI refs
+let motionMasterCheckbox;
+let breatheAmpRow, breatheSpeedRow;
+let wobbleAmpRow, wobbleSpeedRow;
+let waveAmpRow, waveScaleRow, waveSpeedRow;
+let highlightSpeedRow, highlightWidthRow;
+let driftAmpRow, driftSpeedRow;
+let delayRow;
+let mouseRadiusRow, mouseBoostRow;
+let trailAlphaRow;
+
+
+
 function preload() {
   font = loadFont('Montserrat-VariableFont_wght.ttf');
 }
@@ -311,6 +369,10 @@ function setup() {
   spacingRow   = createSliderRow("Point", 6, 250, spacing, v => spacing = v, styleBodyDiv);
   strokeWRow   = createSliderRow("Stroke", 0.5, 8, strokeW, v => strokeW = v, styleBodyDiv);
 
+
+  
+  
+  
   // Alpha 슬라이더
   alphaRow = createSliderRow(
     "Alpha",
@@ -518,7 +580,148 @@ function setup() {
 
   if (autoScaleOn) autoScaleByTextSize();
   buildAllText();
+  
+  
+    // ===================== MOTION SECTION (NEW) =====================
+  let motionTitle = createDiv("Motion");
+  motionTitle.parent(panelDiv);
+  motionTitle.style("margin-top", "10px");
+  motionTitle.style("padding", "4px 2px");
+  motionTitle.style("font-weight", "bold");
+  motionTitle.style("border-bottom", "1px solid #ddd");
+
+  let motionBodyDiv = createDiv();
+  motionBodyDiv.parent(panelDiv);
+  motionBodyDiv.style("margin-top", "8px");
+
+  // Master on/off
+  let mmRow = createDiv();
+  mmRow.parent(motionBodyDiv);
+  mmRow.style("margin-bottom", "8px");
+
+  let mmLabel = createSpan("Enable:");
+  mmLabel.parent(mmRow);
+  mmLabel.style("width", "70px");
+  mmLabel.style("display", "inline-block");
+
+  motionMasterCheckbox = createCheckbox("", motionOn);
+  motionMasterCheckbox.parent(mmRow);
+  motionMasterCheckbox.changed(() => motionOn = motionMasterCheckbox.checked());
+
+  // Breathing
+  let breatheRow = createDiv();
+  breatheRow.parent(motionBodyDiv);
+  breatheRow.style("margin-bottom", "4px");
+  createSpan("Breathe:").parent(breatheRow).style("display", "inline-block");
+  createSpan("").parent(breatheRow).style("width", "14px").style("display", "inline-block");
+
+  let breatheCheck = createCheckbox("", breatheOn);
+  breatheCheck.parent(breatheRow);
+  breatheCheck.changed(() => breatheOn = breatheCheck.checked());
+
+  breatheAmpRow = createSliderRow("Amp", 0, 0.2, breatheAmp, v => breatheAmp = v, motionBodyDiv, 0.001);
+  breatheSpeedRow = createSliderRow("Speed", 0.1, 3, breatheSpeed, v => breatheSpeed = v, motionBodyDiv, 0.01);
+
+  // Wobble
+  let wobbleRow = createDiv();
+  wobbleRow.parent(motionBodyDiv);
+  wobbleRow.style("margin-bottom", "4px");
+  createSpan("Wobble:").parent(wobbleRow).style("display", "inline-block");
+  createSpan("").parent(wobbleRow).style("width", "18px").style("display", "inline-block");
+
+  let wobbleCheck = createCheckbox("", wobbleOn);
+  wobbleCheck.parent(wobbleRow);
+  wobbleCheck.changed(() => wobbleOn = wobbleCheck.checked());
+
+  wobbleAmpRow = createSliderRow("Amp", 0, 12, wobbleAmp, v => wobbleAmp = v, motionBodyDiv, 0.1);
+  wobbleSpeedRow = createSliderRow("Speed", 0.1, 3, wobbleSpeed, v => wobbleSpeed = v, motionBodyDiv, 0.01);
+
+  // Wave phase
+  let waveRow = createDiv();
+  waveRow.parent(motionBodyDiv);
+  waveRow.style("margin-bottom", "4px");
+  createSpan("Wave:").parent(waveRow).style("display", "inline-block");
+  createSpan("").parent(waveRow).style("width", "33px").style("display", "inline-block");
+
+  let waveCheck = createCheckbox("", waveOn);
+  waveCheck.parent(waveRow);
+  waveCheck.changed(() => waveOn = waveCheck.checked());
+
+  waveAmpRow = createSliderRow("Amp", 0, 0.25, waveAmp, v => waveAmp = v, motionBodyDiv, 0.001);
+  waveScaleRow = createSliderRow("Scale", 0.001, 0.05, waveScale, v => waveScale = v, motionBodyDiv, 0.001);
+  waveSpeedRow = createSliderRow("Speed", 0.1, 5, waveSpeed, v => waveSpeed = v, motionBodyDiv, 0.01);
+
+  // Highlight
+  let hiRow = createDiv();
+  hiRow.parent(motionBodyDiv);
+  hiRow.style("margin-bottom", "4px");
+  createSpan("Highlight:").parent(hiRow).style("display", "inline-block");
+  createSpan("").parent(hiRow).style("width", "6px").style("display", "inline-block");
+
+  let hiCheck = createCheckbox("", highlightOn);
+  hiCheck.parent(hiRow);
+  hiCheck.changed(() => highlightOn = hiCheck.checked());
+
+  highlightSpeedRow = createSliderRow("Speed", 0.05, 1.5, highlightSpeed, v => highlightSpeed = v, motionBodyDiv, 0.01);
+  highlightWidthRow = createSliderRow("Width", 0.01, 0.25, highlightWidth, v => highlightWidth = v, motionBodyDiv, 0.001);
+
+  // Drift
+  let driftRow = createDiv();
+  driftRow.parent(motionBodyDiv);
+  driftRow.style("margin-bottom", "4px");
+  createSpan("Drift:").parent(driftRow).style("display", "inline-block");
+  createSpan("").parent(driftRow).style("width", "29px").style("display", "inline-block");
+
+  let driftCheck = createCheckbox("", driftOn);
+  driftCheck.parent(driftRow);
+  driftCheck.changed(() => driftOn = driftCheck.checked());
+
+  driftAmpRow = createSliderRow("Amp", 0, 12, driftAmp, v => driftAmp = v, motionBodyDiv, 0.1);
+  driftSpeedRow = createSliderRow("Speed", 0.1, 3, driftSpeed, v => driftSpeed = v, motionBodyDiv, 0.01);
+
+  // Delay
+  let delayCheckRow = createDiv();
+  delayCheckRow.parent(motionBodyDiv);
+  delayCheckRow.style("margin-bottom", "4px");
+  createSpan("Delay:").parent(delayCheckRow).style("display", "inline-block");
+  createSpan("").parent(delayCheckRow).style("width", "30px").style("display", "inline-block");
+
+  let delayCheck = createCheckbox("", delayOn);
+  delayCheck.parent(delayCheckRow);
+  delayCheck.changed(() => delayOn = delayCheck.checked());
+
+  delayRow = createSliderRow("Glyph", 0, 0.12, delayPerGlyph, v => delayPerGlyph = v, motionBodyDiv, 0.001);
+
+  // Mouse magnet
+  let mouseRow = createDiv();
+  mouseRow.parent(motionBodyDiv);
+  mouseRow.style("margin-bottom", "4px");
+  createSpan("Mouse:").parent(mouseRow).style("display", "inline-block");
+  createSpan("").parent(mouseRow).style("width", "27px").style("display", "inline-block");
+
+  let mouseCheck = createCheckbox("", mouseOn);
+  mouseCheck.parent(mouseRow);
+  mouseCheck.changed(() => mouseOn = mouseCheck.checked());
+
+  mouseRadiusRow = createSliderRow("Radius", 50, 800, mouseRadius, v => mouseRadius = v, motionBodyDiv, 1);
+  mouseBoostRow = createSliderRow("Boost", 0, 1, mouseBoost, v => mouseBoost = v, motionBodyDiv, 0.01);
+
+  // Trail
+  let trailRow = createDiv();
+  trailRow.parent(motionBodyDiv);
+  trailRow.style("margin-bottom", "4px");
+  createSpan("Trail:").parent(trailRow).style("display", "inline-block");
+  createSpan("").parent(trailRow).style("width", "35px").style("display", "inline-block");
+
+  let trailCheck = createCheckbox("", trailOn);
+  trailCheck.parent(trailRow);
+  trailCheck.changed(() => trailOn = trailCheck.checked());
+
+  trailAlphaRow = createSliderRow("Alpha", 0, 120, trailAlpha, v => trailAlpha = v, motionBodyDiv, 1);
+  
 }
+
+
 
 // ===== 메인 draw 루프 =====
 function draw() {
@@ -535,7 +738,14 @@ function draw() {
 // ===== 실제 그리기 로직 =====
 function renderScene(bgCol) {
   blendMode(BLEND);
-  background(bgCol);
+
+  if (motionOn && trailOn) {
+    noStroke();
+    fill(red(bgCol), green(bgCol), blue(bgCol), trailAlpha);
+    rect(0, 0, width, height);
+  } else {
+    background(bgCol);
+  }
 
   let modeConst = BLEND;
   if (blendModeName === "Add") modeConst = ADD;
@@ -858,16 +1068,78 @@ function centerAlignCenters() {
 function drawRipple(pt, progress) {
   let cx = pt.x;
   let cy = pt.y;
+  
+    // Motion time
+  let time = millis() * 0.001;
+
+  // Per-letter delay
+  let p = progress;
+  if (motionOn && delayOn) {
+    p = constrain(progress - gIndex * delayPerGlyph, 0, 1);
+  }
+
+  // Wave phase
+  if (motionOn && waveOn) {
+    let w = sin((pt.x + pt.y) * waveScale + time * waveSpeed) * waveAmp;
+    p = constrain(p + w, 0, 1);
+  }
+
+  // Wobble (point jitter)
+  if (motionOn && wobbleOn) {
+    let ox = (noise(cx * 0.01, cy * 0.01, time * wobbleSpeed) - 0.5) * 2 * wobbleAmp;
+    let oy = (noise(cx * 0.01 + 99, cy * 0.01 + 99, time * wobbleSpeed) - 0.5) * 2 * wobbleAmp;
+    cx += ox;
+    cy += oy;
+  }
+  
   let gIndex = pt.gIndex || 0;
 
   for (let r = radiusMin; r <= radiusMax; r += step) {
-    let t = (r - radiusMin) / (radiusMax - radiusMin);
+        let t = (r - radiusMin) / (radiusMax - radiusMin);
 
-    let visible = (rippleDirection === "Inside-Out") ? t <= progress : t >= 1 - progress;
+    let visible = (rippleDirection === "Inside-Out") ? t <= p : t >= 1 - p;
     if (!visible) continue;
 
     let col = getColorForRipple(t, r, gIndex);
+
+    // Base alpha and stroke
     let alpha = rippleAlpha;
+    let sw = strokeW;
+
+    // Traveling highlight
+    if (motionOn && highlightOn) {
+      let head = (time * highlightSpeed) % 1;
+      let d = abs(t - head);
+      d = min(d, 1 - d);
+      let glow = exp(-pow(d / max(0.0001, highlightWidth), 2));
+
+      alpha = rippleAlpha * (0.35 + highlightBoostA * glow);
+      sw = strokeW * (1 + glow * highlightBoostW);
+    }
+
+    // Mouse magnet
+    if (motionOn && mouseOn) {
+      let d = dist(cx, cy, mouseX, mouseY);
+      let m = 1 - constrain(d / max(1, mouseRadius), 0, 1);
+      alpha = alpha * (0.4 + (1 - 0.4) * (1 - mouseBoost + mouseBoost * m));
+      sw = sw * (1 + m * 0.6);
+    }
+
+    // Breathing
+    let rr = r;
+    if (motionOn && breatheOn) {
+      let b = 1 + sin(time * breatheSpeed + gIndex * 0.3) * breatheAmp;
+      rr = r * b;
+    }
+
+    // Ring drift (offset per ring)
+    let dx = 0, dy = 0;
+    if (motionOn && driftOn) {
+      let ringIndex = floor((r - radiusMin) / max(1, step));
+      let drift = sin(time * driftSpeed + ringIndex * 0.6 + gIndex * 0.2) * driftAmp;
+      dx = drift;
+      dy = -drift * 0.6;
+    }
 
     let forceStroke = (shapeMode === "LineX" || shapeMode === "LineY");
 
@@ -877,23 +1149,27 @@ function drawRipple(pt, progress) {
     } else {
       noFill();
       stroke(col[0], col[1], col[2], alpha);
-      strokeWeight(strokeW);
+      strokeWeight(strokesw);
     }
 
     if (shapeMode === "Circle") {
-      ellipse(cx, cy, r * 2, r * 2);
+      ellipse(cx + dx, cy + dy, rr * 2, rr * 2);
     } else if (shapeMode === "LineX") {
-      line(cx - r, cy, cx + r, cy);
+      line(cx+dx - rr, cy+dy, cx+dx + rr, cy+dy);
     } else if (shapeMode === "LineY") {
-      line(cx, cy - r, cx, cy + r);
+      line(cx+dx, cy+dy - rr, cx+dx, cy+dy + rr);
     } else if (shapeMode === "Rect") {
       rectMode(CENTER);
       rect(cx, cy, r * 2, r * 2);
     } else if (shapeMode === "Triangle") {
-      triangle(cx, cy - r, cx - r, cy + r, cx + r, cy + r);
+      triangle(
+  cx + dx,     cy + dy - rr,
+  cx + dx - rr, cy + dy + rr,
+  cx + dx + rr, cy + dy + rr
+);
     } else if (shapeMode === "Dot") {
       let dotSize = step * 0.4;
-      ellipse(cx + r * 0.3, cy, dotSize, dotSize);
+      ellipse(cx+dx + rr*0.3, cy+dy, dotSize, dotSize);
     }
   }
 }
@@ -901,45 +1177,115 @@ function drawRipple(pt, progress) {
 // ===== SVG Export 전용: p5.Graphics(SVG)에 그리기 =====
 // 참고: SVG에서는 blur/noise 같은 픽셀 필터는 동일하게 재현이 어렵고,
 // 용량도 커지기 쉬워서 SVG 저장에서는 의도적으로 제외했어.
-function drawRippleTo(pg, pt, progress) {
+function drawRipple(pt, progress) {
   let cx = pt.x;
   let cy = pt.y;
-  let gIndex = pt.gIndex || 0;
+  let gIndex = pt.gIndex || 0; // ✅ 먼저 선언해야 함
+
+  // Motion time
+  let time = millis() * 0.001;
+
+  // Per-letter delay
+  let p = progress;
+  if (motionOn && delayOn) {
+    p = constrain(progress - gIndex * delayPerGlyph, 0, 1);
+  }
+
+  // Wave phase
+  if (motionOn && waveOn) {
+    let w = sin((pt.x + pt.y) * waveScale + time * waveSpeed) * waveAmp;
+    p = constrain(p + w, 0, 1);
+  }
+
+  // Wobble (point jitter)
+  if (motionOn && wobbleOn) {
+    let ox = (noise(cx * 0.01, cy * 0.01, time * wobbleSpeed) - 0.5) * 2 * wobbleAmp;
+    let oy = (noise(cx * 0.01 + 99, cy * 0.01 + 99, time * wobbleSpeed) - 0.5) * 2 * wobbleAmp;
+    cx += ox;
+    cy += oy;
+  }
 
   for (let r = radiusMin; r <= radiusMax; r += step) {
     let t = (r - radiusMin) / (radiusMax - radiusMin);
 
-    let visible = (rippleDirection === "Inside-Out") ? t <= progress : t >= 1 - progress;
+    let visible = (rippleDirection === "Inside-Out") ? t <= p : t >= 1 - p;
     if (!visible) continue;
 
     let col = getColorForRipple(t, r, gIndex);
+
+    // Base alpha and stroke
     let alpha = rippleAlpha;
+    let sw = strokeW;
+
+    // Traveling highlight
+    if (motionOn && highlightOn) {
+      let head = (time * highlightSpeed) % 1;
+      let d = abs(t - head);
+      d = min(d, 1 - d);
+      let glow = exp(-pow(d / max(0.0001, highlightWidth), 2));
+
+      alpha = rippleAlpha * (0.35 + highlightBoostA * glow);
+      sw = strokeW * (1 + glow * highlightBoostW);
+    }
+
+    // Mouse magnet
+    if (motionOn && mouseOn) {
+      let d = dist(cx, cy, mouseX, mouseY);
+      let m = 1 - constrain(d / max(1, mouseRadius), 0, 1);
+      alpha = alpha * (0.4 + (1 - 0.4) * (1 - mouseBoost + mouseBoost * m));
+      sw = sw * (1 + m * 0.6);
+    }
+
+    // Breathing
+    let rr = r;
+    if (motionOn && breatheOn) {
+      let b = 1 + sin(time * breatheSpeed + gIndex * 0.3) * breatheAmp;
+      rr = r * b;
+    }
+
+    // Ring drift (offset per ring)
+    let dx = 0, dy = 0;
+    if (motionOn && driftOn) {
+      let ringIndex = floor((r - radiusMin) / max(1, step));
+      let drift = sin(time * driftSpeed + ringIndex * 0.6 + gIndex * 0.2) * driftAmp;
+      dx = drift;
+      dy = -drift * 0.6;
+    }
 
     let forceStroke = (shapeMode === "LineX" || shapeMode === "LineY");
 
     if (drawMode === "Fill" && !forceStroke) {
-      pg.noStroke();
-      pg.fill(col[0], col[1], col[2], alpha);
+      noStroke();
+      fill(col[0], col[1], col[2], alpha);
     } else {
-      pg.noFill();
-      pg.stroke(col[0], col[1], col[2], alpha);
-      pg.strokeWeight(strokeW);
+      noFill();
+      stroke(col[0], col[1], col[2], alpha);
+      strokeWeight(sw); // ✅ strokesw 오타 수정
     }
 
     if (shapeMode === "Circle") {
-      pg.ellipse(cx, cy, r * 2, r * 2);
+      ellipse(cx + dx, cy + dy, rr * 2, rr * 2);
+
     } else if (shapeMode === "LineX") {
-      pg.line(cx - r, cy, cx + r, cy);
+      line(cx + dx - rr, cy + dy, cx + dx + rr, cy + dy);
+
     } else if (shapeMode === "LineY") {
-      pg.line(cx, cy - r, cx, cy + r);
+      line(cx + dx, cy + dy - rr, cx + dx, cy + dy + rr);
+
     } else if (shapeMode === "Rect") {
-      pg.rectMode(CENTER);
-      pg.rect(cx, cy, r * 2, r * 2);
+      rectMode(CENTER);
+      rect(cx + dx, cy + dy, rr * 2, rr * 2); // ✅ rr, dx/dy 적용
+
     } else if (shapeMode === "Triangle") {
-      pg.triangle(cx, cy - r, cx - r, cy + r, cx + r, cy + r);
+      triangle(
+        cx + dx,      cy + dy - rr,
+        cx + dx - rr, cy + dy + rr,
+        cx + dx + rr, cy + dy + rr
+      );
+
     } else if (shapeMode === "Dot") {
       let dotSize = step * 0.4;
-      pg.ellipse(cx + r * 0.3, cy, dotSize, dotSize);
+      ellipse(cx + dx + rr * 0.3, cy + dy, dotSize, dotSize);
     }
   }
 }
